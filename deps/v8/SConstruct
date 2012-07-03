@@ -85,7 +85,7 @@ LIBRARY_FLAGS = {
     },
     'visibility:hidden': {
       # Use visibility=default to disable this.
-      'CXXFLAGS':     ['-fvisibility=hidden']
+      'CXXFLAGS':     ['-fvisibility=default']
     },
     'strictaliasing:off': {
       'CCFLAGS':      ['-fno-strict-aliasing']
