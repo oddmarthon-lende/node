@@ -57,6 +57,7 @@
       'type': 'executable',
 
       'dependencies': [
+        'deps/cares/cares.gyp:cares',
         'deps/http_parser/http_parser.gyp:http_parser',
         'deps/uv/uv.gyp:uv',
         'node_js2c#host',
@@ -86,6 +87,7 @@
         'src/node_string.cc',
         'src/node_zlib.cc',
         'src/pipe_wrap.cc',
+        'src/signal_wrap.cc',
         'src/stream_wrap.cc',
         'src/slab_allocator.cc',
         'src/tcp_wrap.cc',
@@ -117,6 +119,7 @@
         'src/req_wrap.h',
         'src/slab_allocator.h',
         'src/stream_wrap.h',
+        'src/tree.h',
         'src/v8_typed_array.h',
         'deps/http_parser/http_parser.h',
         '<(SHARED_INTERMEDIATE_DIR)/node_natives.h',
@@ -200,12 +203,8 @@
             '_UNICODE=1',
           ],
           'libraries': [ '-lpsapi.lib' ]
-        },{ # POSIX
+        }, { # POSIX
           'defines': [ '__POSIX__' ],
-          'sources': [
-            'src/node_signal_watcher.cc',
-            'src/node_io_watcher.cc',
-          ]
         }],
         [ 'OS=="mac"', {
           'libraries': [ '-framework Carbon' ],
@@ -226,6 +225,15 @@
         [ 'OS=="solaris"', {
           'libraries': [
             '-lkstat',
+            '-lumem',
+          ],
+          'defines!': [
+            'PLATFORM="solaris"',
+          ],
+          'defines': [
+            # we need to use node's preferred "sunos"
+            # rather than gyp's preferred "solaris"
+            'PLATFORM="sunos"',
           ],
         }],
       ],

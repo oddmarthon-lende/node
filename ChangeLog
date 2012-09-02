@@ -1,4 +1,326 @@
-2012.06.25, Version 0.8.0 (stable)
+2012.08.28, Version 0.9.1 (Unstable)
+
+* buffer: Add Buffer.isEncoding(enc) to test for valid encoding values (isaacs)
+
+* Raise UV_ECANCELED on premature close. (Ben Noordhuis)
+
+* Remove c-ares from libuv, move to a top-level node dependency (Bert Belder)
+
+* ref/unref for all HandleWraps, timers, servers, and sockets (Timothy J Fontaine)
+
+* addon: remove node-waf, superseded by node-gyp (Ben Noordhuis)
+
+* child_process: emit error on exec failure (Ben Noordhuis)
+
+* cluster: do not use internal server API (Andreas Madsen)
+
+* constants: add O_DIRECT (Ian Babrou)
+
+* crypto: add sync interface to crypto.pbkdf2() (Ben Noordhuis)
+
+* darwin: emulate fdatasync() (Fedor Indutny)
+
+* dgram: make .bind() always asynchronous (Ben Noordhuis)
+
+* events: Make emitter.listeners() side-effect free (isaacs, Joe Andaverde)
+
+* fs: Throw early on invalid encoding args (isaacs)
+
+* fs: fix naming of truncate/ftruncate functions (isaacs)
+
+* http: bubble up parser errors to ClientRequest (Brian White)
+
+* linux: improve cpuinfo parser on ARM and MIPS (Ben Noordhuis)
+
+* net: add support for IPv6 addresses ending in :: (Josh Erickson)
+
+* net: support Server.listen(Pipe) (Andreas Madsen)
+
+* node: don't scan add-on for "init" symbol (Ben Noordhuis)
+
+* remove process.uvCounters() (Ben Noordhuis)
+
+* repl: console writes to repl rather than process stdio (Nathan Rajlich)
+
+* timers: implement setImmediate (Timothy J Fontaine)
+
+* tls: fix segfault in pummel/test-tls-ci-reneg-attack (Ben Noordhuis)
+
+* tools: Move gyp addon tools to node-gyp (Nathan Rajlich)
+
+* unix: preliminary signal handler support (Ben Noordhuis)
+
+* unix: remove dependency on ev_child (Ben Noordhuis)
+
+* unix: work around darwin bug, don't poll() on pipe (Fedor Indutny)
+
+* util: Formally deprecate util.pump() (Ben Noordhuis)
+
+* windows: make active and closing handle state independent (Bert Belder)
+
+* windows: report spawn errors to the exit callback (Bert Belder)
+
+* windows: signal handling support with uv_signal_t (Bert Belder)
+
+
+2012.07.20, Version 0.9.0 (Unstable), f9b237f478c372fd55e4590d7399dcd8f25f3603
+
+* punycode: update to v1.1.1 (Mathias Bynens)
+
+* c-ares: upgrade to 1.9.0 (Saúl Ibarra Corretgé)
+
+* dns: ignore rogue DNS servers reported by windows (Saúl Ibarra Corretgé)
+
+* unix: speed up uv_async_send() (Ben Noordhuis)
+
+* darwin: get cpu model correctly on mac (Xidorn Quan)
+
+* nextTick: Handle tick callbacks before any other I/O (isaacs)
+
+* Enable color customization of `util.inspect` (Pavel Lang)
+
+* tls: Speed and memory improvements (Fedor Indutny)
+
+* readline: Use one history item for reentered line (Vladimir Beloborodov)
+
+* Fix #3521 Make process.env more like a regular Object (isaacs)
+
+
+2012.08.22, Version 0.8.8 (Stable)
+
+* V8: upgrade to 3.11.10.19
+
+* npm: upgrade to 1.1.59
+
+* windows: fix uninitialized memory access in uv_update_time() (Bert Belder)
+
+* unix, windows: fix memory corruption in fs-poll.c (Ben Noordhuis)
+
+* unix: fix integer overflow in uv_hrtime (Tim Holy)
+
+* sunos: fix uv_cpu_info() on x86_64 (Ben Noordhuis)
+
+* tls: update default cipher list (Ben Noordhuis)
+
+* unix: Fix llvm and older gcc duplicate symbol warnings (Bert Belder)
+
+* fs: fix use after free in stat watcher (Ben Noordhuis)
+
+* build: Fix using manually compiled gcc on OS X (Nathan Rajlich)
+
+* windows: make junctions work again (Bert Belder)
+
+
+2012.08.15, Version 0.8.7 (Stable), f640c5d35cba96634cd8176a525a1d876e361a61
+
+* npm: Upgrade to 1.1.49
+
+* website: download page (Golo Roden)
+
+* crypto: fix uninitialized memory access in openssl (Ben Noordhuis)
+
+* buffer, crypto: fix buffer decoding (Ben Noordhuis)
+
+* build: compile with -fno-tree-vrp when gcc >= 4.0 (Ben Noordhuis)
+
+* tls: handle multiple CN fields when verifying cert (Ben Noordhuis)
+
+* doc: remove unused util from child_process (Kyle Robinson Young)
+
+* build: rework -fvisibility=hidden detection (Ben Noordhuis)
+
+* windows: don't duplicate invalid stdio handles (Bert Belder)
+
+* windows: fix typos in process-stdio.c (Bert Belder)
+
+
+2012.08.07, Version 0.8.6 (Stable), 0544a586ca6b6b900a42e164033dbf350765700a
+
+* npm: Upgrade to v1.1.48
+
+* Add 'make binary' to build binary tarballs for all Unixes (Nathan Rajlich)
+
+* zlib: Emit 'close' on destroy(). (Dominic Tarr)
+
+* child_process: Fix stdout=null when stdio=['pipe'] (Tyler Neylon)
+
+* installer: prevent ETXTBSY errors (Ben Noordhuis)
+
+* installer: honor --without-npm, default install path (Ben Noordhuis)
+
+* net: make pause work with connecting sockets (Bert Belder)
+
+* installer: fix cross-compile installs (Ben Noordhuis)
+
+* net: fix .listen({fd:0}) (Ben Noordhuis)
+
+* windows: map WSANO_DATA to UV_ENOENT (Bert Belder)
+
+
+2012.08.02, Version 0.8.5 (Stable), 9b86a4453f0c76f2707a75c0b2343aba33ec63bc
+
+* node: tag Encode and friends NODE_EXTERN (Ben Noordhuis)
+
+* fs: fix ReadStream / WriteStream missing callback (Gil Pedersen)
+
+* fs: fix readFileSync("/proc/cpuinfo") regression (Ben Noordhuis)
+
+* installer: don't assume bash is installed (Ben Noordhuis)
+
+* Report errors properly from --eval and stdin (isaacs)
+
+* assert: fix throws() throws an error without message property (koichik)
+
+* cluster: fix libuv assert in net.listen() (Ben Noordhuis)
+
+* build: always link sunos builds with libumem (Trent Mick)
+
+* build: improve armv7 / hard-float detection (Adam Malcontenti-Wilson)
+
+* https: Use host header as effective servername (isaacs)
+
+* sunos: work around OS bug to prevent fs.watch() from spinning (Bryan Cantrill)
+
+* linux: fix 'two watchers, one path' segfault (Ben Noordhuis)
+
+* windows: fix memory leaks in many fs functions (Bert Belder)
+
+* windows: don't allow directories to be opened for writing/appending (Bert Belder)
+
+* windows: make fork() work even when not all stdio handles are valid (Bert Belder)
+
+* windows: make unlink() not remove mount points, and improve performance (Bert Belder)
+
+* build: Sign pkg installer for OS X (isaacs)
+
+
+2012.07.25, Version 0.8.4 (Stable), f98562fcd7d1cab573ca4dc1612157d6999befd4
+
+* V8: Upgrade to 3.11.10.17
+
+* npm: Upgrade to 1.1.45
+
+* net: fix Socket({ fd: 42 }) api (Ben Noordhuis)
+
+* readline: Remove event listeners on close (isaacs)
+
+* windows: correctly prep long path for fs.exists(Sync) (Bert Belder)
+
+* debugger: wake up the event loop when a debugger command is dispatched (Peter Rybin)
+
+* tls: verify server's identity (Fedor Indutny)
+
+* net: ignore socket.setTimeout(Infinity or NaN) (Fedor Indutny)
+
+
+2012.07.19, Version 0.8.3 (Stable), 60bf2d6cb33e4ce55604f73889ab840a9de8bdab
+
+* V8: upgrade to 3.11.10.15
+
+* npm: Upgrade to 1.1.43
+
+* net: fix net.Server.listen({fd:x}) error reporting (Ben Noordhuis)
+
+* net: fix bogus errno reporting (Ben Noordhuis)
+
+* build: Move npm shebang logic into an npm script (isaacs)
+
+* build: fix add-on loading on freebsd (Ben Noordhuis)
+
+* build: disable unsafe optimizations (Ben Noordhuis)
+
+* build: fix spurious mksnapshot crashes for good (Ben Noordhuis)
+
+* build: speed up genv8constants (Dave Pacheco)
+
+* fs: make unwatchFile() remove a specific listener (Ben Noordhuis)
+
+* domain: Remove first arg from intercepted fn (Toshihiro Nakamura)
+
+* domain: Fix memory leak on error (isaacs)
+
+* events: Fix memory leak from removeAllListeners (Nathan Rajlich)
+
+* zlib: Fix memory leak in Unzip class. (isaacs)
+
+* crypto: Fix memory leak in DecipherUpdate() (Ben Noordhuis)
+
+
+2012.07.09, Version 0.8.2 (Stable), cc6084b9ac5cf1d4fe5e7165b71e8fc05d11be1f
+
+* npm: Upgrade to 1.1.36
+
+* readline: don't use Function#call() (Nathan Rajlich)
+
+* Code cleanup to pass 'use strict' (Jonas Westerlund)
+
+* module: add filename to require() json errors (TJ Holowaychuk)
+
+* readline: fix for unicode prompts (Tim Macfarlane)
+
+* timers: fix handling of large timeouts (Ben Noordhuis)
+
+* repl: fix passing an empty line inserting "undefined" into the buffer (Nathan Rajlich)
+
+* repl: fix crashes when buffering command (Maciej Małecki)
+
+* build: rename strict_aliasing to node_no_strict_aliasing (Ben Noordhuis)
+
+* build: disable -fstrict-aliasing for any gcc < 4.6.0 (Ben Noordhuis)
+
+* build: detect cc version with -dumpversion (Ben Noordhuis)
+
+* build: handle output of localized gcc or clang (Ben Noordhuis)
+
+* unix: fix memory corruption in freebsd.c (Ben Noordhuis)
+
+* unix: fix 'zero handles, one request' busy loop (Ben Noordhuis)
+
+* unix: fix busy loop on unexpected tcp message (Ben Noordhuis)
+
+* unix: fix EINPROGRESS busy loop (Ben Noordhuis)
+
+
+2012.06.29, Version 0.8.1 (stable), 2134aa3d5c622fc3c3b02ccb713fcde0e0df479a
+
+* V8: upgrade to v3.11.10.12
+
+* npm: upgrade to v1.1.33
+  - Support for parallel use of the cache folder
+  - Retry on registry timeouts or network failures (Trent Mick)
+  - Reduce 'engines' failures to a warning
+  - Use new zsh completion if aviailable (Jeremy Cantrell)
+
+* Fix #3577 Un-break require('sys')
+
+* util: speed up formatting of large arrays/objects (Ben Noordhuis)
+
+* windows: make fs.realpath(Sync) work with UNC paths (Bert Belder)
+
+* build: fix --shared-v8 option (Ben Noordhuis)
+
+* doc: `detached` is a boolean (Andreas Madsen)
+
+* build: use proper python interpreter (Ben Noordhuis)
+
+* build: expand ~ in `./configure --prefix=~/a/b/c` (Ben Noordhuis)
+
+* build: handle CC env var with spaces (Gabriel de Perthuis)
+
+* build: fix V8 build when compiling with gcc 4.5 (Ben Noordhuis)
+
+* build: fix --shared-v8 option (Ben Noordhuis)
+
+* windows msi: Fix icon issue which caused huge file size (Bert Belder)
+
+* unix: assume that dlopen() may clobber dlerror() (Ben Noordhuis)
+
+* sunos: fix memory corruption bugs (Ben Noordhuis)
+
+* windows: better (f)utimes and (f)stat (Bert Belder)
+
+
+2012.06.25, Version 0.8.0 (stable), 8b8a7a7f9b41e74e1e810d0330738ad06fc302ec
 
 * V8: upgrade to v3.11.10.10
 
@@ -438,6 +760,38 @@
 * Use isolates for internal debugger (Fedor Indutny)
 
 * Bug fixes
+
+
+2012.07.10 Version 0.6.20 (maintenance)
+
+* npm: Upgrade to 1.1.37 (isaacs)
+
+* benchmark: Backport improvements made in master (isaacs)
+
+* build: always link with -lz (Trent Mick)
+
+* core: use proper #include directives (Ben Noordhuis)
+
+* cluster: don't silently drop messages when the write queue gets big (Bert Belder)
+
+* windows: don't print error when GetConsoleTitleW returns an empty string (Bert Belder)
+
+
+2012.06.06 Version 0.6.19 (stable), debf552ed2d4a53957446e82ff3c52a8182d5ff4
+
+* npm: upgrade to 1.1.24
+
+* fs: no end emit after createReadStream.pause() (Andreas Madsen)
+
+* vm: cleanup module memory leakage (Marcel Laverdet)
+
+* unix: fix loop starvation under high network load (Ben Noordhuis)
+
+* unix: remove abort() in ev_unref() (Ben Noordhuis)
+
+* windows/tty: never report error after forcibly aborting line-buffered read (Bert Belder)
+
+* windows: skip GetFileAttributes call when opening a file (Bert Belder)
 
 
 2012.05.15 Version 0.6.18 (stable), 4bc1d395de6abed2cf1e4d0b7b3a1480a21c368f

@@ -25,7 +25,7 @@
 // bootstrapping the node.js core. Special caution is given to the performance
 // of the startup process, so many dependencies are invoked lazily.
 (function(process) {
-  global = this;
+  this.global = this;
 
   function startup() {
     var EventEmitter = NativeModule.require('events').EventEmitter;
@@ -45,6 +45,7 @@
     startup.processAssert();
     startup.processConfig();
     startup.processNextTick();
+    startup.processMakeCallback();
     startup.processStdio();
     startup.processKillAndExit();
     startup.processSignalHandlers();
@@ -73,7 +74,7 @@
 
     } else if (process._eval != null) {
       // User passed '-e' or '--eval' arguments to Node.
-      evalScript('eval');
+      evalScript('[eval]');
     } else if (process.argv[1]) {
       // make process.argv[1] into a full path
       var path = NativeModule.require('path');
@@ -183,6 +184,16 @@
       var t = NativeModule.require('timers');
       return t.clearInterval.apply(this, arguments);
     };
+
+    global.setImmediate = function() {
+      var t = NativeModule.require('timers');
+      return t.setImmediate.apply(this, arguments);
+    };
+
+    global.clearImmediate = function() {
+      var t = NativeModule.require('timers');
+      return t.clearImmediate.apply(this, arguments);
+    };
   };
 
   startup.globalConsole = function() {
@@ -224,38 +235,125 @@
       if (value === 'false') return false;
       return value;
     });
-  }
+  };
+
+  startup.processMakeCallback = function() {
+    process._makeCallback = function(obj, fn, args) {
+      var domain = obj.domain;
+      if (domain) {
+        if (domain._disposed) return;
+        domain.enter();
+      }
+
+      var ret = fn.apply(obj, args);
+
+      if (domain) domain.exit();
+
+      // process the nextTicks after each time we get called.
+      process._tickCallback();
+      return ret;
+    };
+  };
 
   startup.processNextTick = function() {
     var nextTickQueue = [];
     var nextTickIndex = 0;
+    var inTick = false;
+    var tickDepth = 0;
 
-    process._tickCallback = function() {
-      var nextTickLength = nextTickQueue.length;
-      if (nextTickLength === 0) return;
+    // the maximum number of times it'll process something like
+    // nextTick(function f(){nextTick(f)})
+    // It's unlikely, but not illegal, to hit this limit.  When
+    // that happens, it yields to libuv's tick spinner.
+    // This is a loop counter, not a stack depth, so we aren't using
+    // up lots of memory here.  I/O can sneak in before nextTick if this
+    // limit is hit, which is not ideal, but not terrible.
+    process.maxTickDepth = 1000;
 
-      while (nextTickIndex < nextTickLength) {
-        var tock = nextTickQueue[nextTickIndex++];
-        var callback = tock.callback;
-        if (tock.domain) {
-          if (tock.domain._disposed) continue;
-          tock.domain.enter();
-        }
-        callback();
-        if (tock.domain) {
-          tock.domain.exit();
+    function tickDone(tickDepth_) {
+      tickDepth = tickDepth_ || 0;
+      nextTickQueue.splice(0, nextTickIndex);
+      nextTickIndex = 0;
+      inTick = false;
+      if (nextTickQueue.length) {
+        process._needTickCallback();
+      }
+    }
+
+    process._tickCallback = function(fromSpinner) {
+
+      // if you add a nextTick in a domain's error handler, then
+      // it's possible to cycle indefinitely.  Normally, the tickDone
+      // in the finally{} block below will prevent this, however if
+      // that error handler ALSO triggers multiple MakeCallbacks, then
+      // it'll try to keep clearing the queue, since the finally block
+      // fires *before* the error hits the top level and is handled.
+      if (tickDepth >= process.maxTickDepth) {
+        if (fromSpinner) {
+          // coming in from the event queue.  reset.
+          tickDepth = 0;
+        } else {
+          if (nextTickQueue.length) {
+            process._needTickCallback();
+          }
+          return;
         }
       }
 
-      nextTickQueue.splice(0, nextTickIndex);
-      nextTickIndex = 0;
+      if (!nextTickQueue.length) return tickDone();
+
+      if (inTick) return;
+      inTick = true;
+
+      // always do this at least once.  otherwise if process.maxTickDepth
+      // is set to some negative value, or if there were repeated errors
+      // preventing tickDepth from being cleared, we'd never process any
+      // of them.
+      do {
+        tickDepth++;
+        var nextTickLength = nextTickQueue.length;
+        if (nextTickLength === 0) return tickDone();
+        while (nextTickIndex < nextTickLength) {
+          var tock = nextTickQueue[nextTickIndex++];
+          var callback = tock.callback;
+          if (tock.domain) {
+            if (tock.domain._disposed) continue;
+            tock.domain.enter();
+          }
+          var threw = true;
+          try {
+            callback();
+            threw = false;
+          } finally {
+            // finally blocks fire before the error hits the top level,
+            // so we can't clear the tickDepth at this point.
+            if (threw) tickDone(tickDepth);
+          }
+          if (tock.domain) {
+            tock.domain.exit();
+          }
+        }
+        nextTickQueue.splice(0, nextTickIndex);
+        nextTickIndex = 0;
+
+        // continue until the max depth or we run out of tocks.
+      } while (tickDepth < process.maxTickDepth &&
+               nextTickQueue.length > 0);
+
+      tickDone();
     };
 
     process.nextTick = function(callback) {
+      // on the way out, don't bother.
+      // it won't get fired anyway.
+      if (process._exiting) return;
+
       var tock = { callback: callback };
       if (process.domain) tock.domain = process.domain;
       nextTickQueue.push(tock);
-      process._needTickCallback();
+      if (nextTickQueue.length) {
+        process._needTickCallback();
+      }
     };
   };
 
@@ -267,7 +365,19 @@
     var module = new Module(name);
     module.filename = path.join(cwd, name);
     module.paths = Module._nodeModulePaths(cwd);
-    var result = module._compile('return eval(process._eval)', name);
+    var script = process._eval;
+    if (!Module._contextLoad) {
+      var body = script;
+      script = 'global.__filename = ' + JSON.stringify(name) + ';\n' +
+               'global.exports = exports;\n' +
+               'global.module = module;\n' +
+               'global.__dirname = __dirname;\n' +
+               'global.require = require;\n' +
+               'return require("vm").runInThisContext(' +
+               JSON.stringify(body) + ', ' +
+               JSON.stringify(name) + ', true);\n';
+    }
+    var result = module._compile(script, name + '-wrapper');
     if (process._print_eval) console.log(result);
   }
 
@@ -452,40 +562,47 @@
   startup.processSignalHandlers = function() {
     // Load events module in order to access prototype elements on process like
     // process.addListener.
-    var signalWatchers = {};
+    var signalWraps = {};
     var addListener = process.addListener;
     var removeListener = process.removeListener;
 
     function isSignal(event) {
-      return event.slice(0, 3) === 'SIG' && startup.lazyConstants()[event];
+      return event.slice(0, 3) === 'SIG' &&
+             startup.lazyConstants().hasOwnProperty(event);
     }
 
     // Wrap addListener for the special signal types
     process.on = process.addListener = function(type, listener) {
-      var ret = addListener.apply(this, arguments);
-      if (isSignal(type)) {
-        if (!signalWatchers.hasOwnProperty(type)) {
-          var b = process.binding('signal_watcher');
-          var w = new b.SignalWatcher(startup.lazyConstants()[type]);
-          w.callback = function() { process.emit(type); };
-          signalWatchers[type] = w;
-          w.start();
+      if (isSignal(type) &&
+          !signalWraps.hasOwnProperty(type)) {
+        var Signal = process.binding('signal_wrap').Signal;
+        var wrap = new Signal();
 
-        } else if (this.listeners(type).length === 1) {
-          signalWatchers[type].start();
+        wrap.unref();
+
+        wrap.onsignal = function() { process.emit(type); };
+
+        var signum = startup.lazyConstants()[type];
+        var r = wrap.start(signum);
+        if (r) {
+          wrap.close();
+          throw errnoException(errno, 'uv_signal_start');
         }
+
+        signalWraps[type] = wrap;
       }
 
-      return ret;
+      return addListener.apply(this, arguments);
     };
 
     process.removeListener = function(type, listener) {
       var ret = removeListener.apply(this, arguments);
       if (isSignal(type)) {
-        assert(signalWatchers.hasOwnProperty(type));
+        assert(signalWraps.hasOwnProperty(type));
 
         if (this.listeners(type).length === 0) {
-          signalWatchers[type].stop();
+          signalWraps[type].close();
+          delete signalWraps[type];
         }
       }
 
